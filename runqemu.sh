@@ -11,6 +11,8 @@ ROOTDIR=/opt/buildroot/16.11_64
 #ROOTDIR=/opt/debian/jessie
 #ROOTDIR=/media/akashi/root
 
+ROOTFSIMG=/opt/buildroot/16.11_64.ext4
+
 # qemu default network
 #hub 0
 # \ hub0port1: user.0: index=0,type=user,net=10.0.2.0,restrict=off
@@ -22,7 +24,7 @@ ROOTDIR=/opt/buildroot/16.11_64
 # sync with /etc/my-qmeu-if[up|down]
 #NETWORK="-netdev tap,id=mynet0,script=/etc/my-qemu-ifup,downscript=/etc/my-qemu-ifdown -device virtio-net-device,netdev=mynet0"
 
-#NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-system/qemu-bridge-helper -device virtio-net-pci,netdev=hn0"
+NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-system/qemu-bridge-helper -device virtio-net-pci,netdev=hn0"
 
 
 ###
@@ -56,7 +58,7 @@ CMDLINE="ip=dhcp loglevel=9 consolelog=9"
 SWAPFILE=/home/akashi/arm/armv8/linaro/uefi/swap_512m.img
 
 print_usage() {
-	echo `basename $0` [-cdhkKlLnt9] [\<kernerl_name\>]
+	echo `basename $0` [-cdhkKlLntv9] [\<kernerl_name\>]
 	echo "  c: enable crash dump"
 	echo "  d: turn on qemu debug"
 	echo "  h: enable hibernate (w/ swap dev)"
@@ -66,11 +68,12 @@ print_usage() {
 	echo "  L: direct linux boot"
 	echo "  n: no execute, echoing command"
 	echo "  t: console in telnet mode"
+	echo "  v: virtio root filesystem"
 	echo "  9: 9P root filesystem"
 	exit 1
 }
 
-while getopts cdhkKlLnt9 OPT
+while getopts cdhkKlLntv9 OPT
 do
 	case ${OPT} in
 	c) cflag=1;;
@@ -82,6 +85,7 @@ do
 	L) Lflag=1;;
 	n) nflag=1;;
 	t) tflag=1;;
+	v) vflag=1;;
 	9) R9flag=1;;
 	*) print_usage;;
 	esac
@@ -105,7 +109,10 @@ if [ x$tflag != x"" ] ; then
 	SERIAL="${SERIAL} -serial telnet:localhost:1235,server,nowait"
 fi
 
-if [ x$R9flag != x"" ] ; then
+if [ x$vflag != x"" ] ; then
+	CMDLINE="${CMDLINE} root=/dev/vda rootfstype=ext4 rw"
+	VFS="-drive if=none,file=${ROOTFSIMG},id=hd0 -device virtio-blk-device,drive=hd0"
+elif [ x$R9flag != x"" ] ; then
 	#CMDLINE="${CMDLINE} root=baa rootfstype=9p rootflags=trans=virtio rw"
 	CMDLINE="${CMDLINE} root=baa rootfstype=9p rootflags=trans=virtio,cache=loose rw"
 	RFS9P="-fsdev local,id=baa,path=${ROOTDIR},security_model=none -device virtio-9p-device,fsdev=baa,mount_tag=/dev/root"
@@ -150,6 +157,7 @@ CMD="${SUDO} ${QEMU} ${DEBUG} \
 	-semihosting \
 	${NETWORK} \
 	${RFS9P} \
+	${VFS} \
 	${SWAPDEV}"
 
 if [ x$Lflag != x"" ] ; then

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function print_usage {
-echo "setup_gcc [-b][-v gcc-version] [32|64]"
+echo "setup_gcc [-b][-l clag-version][-v gcc-version] [32|64]"
 }
 
 # Please debug this line.
@@ -15,12 +15,27 @@ echo "setup_gcc [-b][-v gcc-version] [32|64]"
 # unset POSIXLY_CORRECT
 
 # default version
-_VERSION=6.3
+_VERSION=7.1
+CLANG_VERSION=
 
 while true ; do
 	case "$1" in
 	-b)
 		BE=_be; EB=eb; shift; ;;
+	-l)
+		case "$2" in
+		3.8)
+			CLANG_VERSION=$2; shift 2; ;;
+		3.9)
+			CLANG_VERSION=$2; shift 2; ;;
+		4.0)
+			CLANG_VERSION=$2; shift 2; ;;
+		5.0)
+			CLANG_VERSION=$2; shift 2; ;;
+		*)
+			echo Clang version $2 not available
+			print_usage; unset CLANG_VERSION; shift 2; ;;
+		esac;;
 	-v)
 		case "$2" in
 		4.9)
@@ -35,10 +50,10 @@ while true ; do
 			_VERSION=$2; shift 2; ;;
 		*)
 			echo Version $2 not available
-			print_usage; unset _VERSION ;;
+			print_usage; unset _VERSION; shift 2; ;;
 		esac;;
 	-h)
-		print_usage; unset _VERSION; exit 1 ;;
+		print_usage; unset _VERSION CLANG_VERSION; exit 1 ;;
 	--)
 		shift; break ;;
 	*)
@@ -71,7 +86,12 @@ PS1=${_VERSION}_32${EB}-$PS1
 
 else
 	print_usage
-	unset _VERSION
+	unset _VERSION CLANG_VERSION
+	exit 1
+fi
+
+if [ "${CLANG_VERSION}" != "" ] ; then
+	PATH=/opt/clang/clang-${CLANG_VERSION}/bin:$PATH
 fi
 
 # echo $ARCH
@@ -81,4 +101,4 @@ fi
 # echo $MANPATH
 
 export PATH ARCH CROSS_COMPILE MANPATH
-unset _VERSION
+unset _VERSION CLANG_VERSION

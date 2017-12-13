@@ -1,7 +1,9 @@
 #!/bin/sh
 
-KERNEL=~/arm/armv7/linaro/build/kernel_v4.11/arch/arm/boot/zImage
-DTB=~/arm/armv7/linaro/build/kernel_v4.11/arch/arm/boot/dts/vexpress-v2p-ca15-tc1.dtb
+#KERNEL=~/arm/armv7/linaro/build/kernel_v4.11/arch/arm/boot/zImage
+#DTB=~/arm/armv7/linaro/build/kernel_v4.11/arch/arm/boot/dts/vexpress-v2p-ca15-tc1.dtb
+KERNEL=~/arm/armv7/build/kernel_414/arch/arm/boot/zImage
+DTB=~/arm/armv7/build/kernel_414/arch/arm/boot/dts/vexpress-v2p-ca15-tc1.dtb
 
 ROOTFS=/opt/ubuntu/16.04_32
 
@@ -14,6 +16,8 @@ CMDLINE="${CMDLINE} S root=/dev/nfs nfsroot=192.168.10.1:${ROOTFS} rw"
 qemu-system-arm \
 -nographic \
 -semihosting \
+-serial telnet:localhost:1234,server,nowait \
+-serial telnet:localhost:1235,server,nowait \
 -M vexpress-a15 \
 -m 256M \
 -kernel ${KERNEL} \
