@@ -3,8 +3,8 @@
 FVP_PATH=/home/akashi/arm/models/FVP_Base_AEMv8A-AEMv8A/models/Linux64_GCC-4.7
 SIM=${FVP_PATH}/FVP_Base_AEMv8A-AEMv8A
 # from inforcenter.arm.com
-#FVP_PATH=/home/akashi/arm/models/Base_RevC_AEMv8A_pkg/models/Linux64_GCC-4.9
-#SIM=${FVP_PATH}/FVP_Base_RevC-2xAEMv8A
+FVP_PATH=/home/akashi/arm/models/Base_RevC_AEMv8A_pkg/models/Linux64_GCC-4.9
+SIM=${FVP_PATH}/FVP_Base_RevC-2xAEMv8A
 
 QEMU=/home/akashi/bin/qemu-system-aarch64
 
