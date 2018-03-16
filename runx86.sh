@@ -3,10 +3,11 @@
 #CPU=host
 CPU=kvm64
 
-UEFIFILE="/home/akashi/x86/qemu_work/OVMF.fd"
+#UEFIFILE="/home/akashi/x86/qemu_work/OVMF.fd"
+UEFIFILE="/home/akashi/x86/build/ovmf/Build/OvmfX64/DEBUG_GCC5/FV/OVMF.fd"
 
-KERNFILE="/home/akashi/x86/build/kernel_x86/arch/x86/boot/bzImage"
-KERNFILE="/home/akashi/x86/build/kernel_kexec/arch/x86/boot/bzImage"
+/* default */
+KERNFILE="/home/akashi/x86/build/kernel_416/arch/x86/boot/bzImage"
 
 #ROOTDIR="/opt/buildroot/16.11_x86"
 ROOTDIR="/opt/buildroot/16.11_x86_64"
@@ -14,8 +15,10 @@ ROOTFILE="/home/akashi/x86/build/br-16.11_64/images/rootfs.ext2"
 
 CMDLINE="debug earlyprintk=ttyS0 vga=normal"
 CMDLINE="${CMDLINE} ip=dhcp"
-CMDLINE="${CMDLINE} crashkernel=64M"
+CMDLINE="${CMDLINE} crashkernel=256M"
 CMDLINE="${CMDLINE} console=ttyS0"
+CMDLINE="${CMDLINE} efi=debug"
+CMDLINE="${CMDLINE} memblock=debug"
 
 #NETWORK="-net user,id=mynet0,net=192.168.10.0/24 -net nic,model=virtio"
 #NETWORK="-net nic,netdev=guest0 -netdev tap,id=guest0,ifname=tap0"
@@ -73,7 +76,7 @@ fi
 SUDO=sudo
 #ECHO=echo
 ${ECHO} ${SUDO} ~/bin/qemu-system-x86_64 -enable-kvm \
--M q35 -smp cpus=2 -cpu ${CPU} -m 1G \
+-M q35 -smp cpus=2 -cpu ${CPU} -m 512M \
 ${PARAMS} \
 ${FIRM} \
 ${KERNEL} \

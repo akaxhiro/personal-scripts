@@ -1,12 +1,10 @@
 #!/bin/bash
 
-FVP_PATH=/home/akashi/arm/models/FVP_Base_AEMv8A-AEMv8A/models/Linux64_GCC-4.7
-SIM=${FVP_PATH}/FVP_Base_AEMv8A-AEMv8A
+#FVP_PATH=/home/akashi/arm/models/FVP_Base_AEMv8A-AEMv8A/models/Linux64_GCC-4.7
+#SIM=${FVP_PATH}/FVP_Base_AEMv8A-AEMv8A
 # from inforcenter.arm.com
-FVP_PATH=/home/akashi/arm/models/Base_RevC_AEMv8A_pkg/models/Linux64_GCC-4.9
-SIM=${FVP_PATH}/FVP_Base_RevC-2xAEMv8A
-
-QEMU=/home/akashi/bin/qemu-system-aarch64
+FVP_PATH=/home/akashi/arm/models/FVP_Base_Cortex-A32x124/models/Linux64_GCC-4.9
+SIM=${FVP_PATH}/FVP_Base_Cortex-A32x1
 
 # new for supporting KASLR
 FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build/fvp/debug
@@ -23,8 +21,8 @@ FW_BIN=fip.bin
 #   Ard's kaslr-capable uefi; See below
 #FW_BIN=/home/akashi/arm/armv8/linaro/uefi/ard/fip_fvp_kaslr.bin
 
-IMAGE=../build/ub_1501/u-boot.elf
-IMAGE=/home/akashi/arm/armv8/linaro/misc/startup_Cortex-A32_GCC/startup_Cortex-A32_GCC.axf.org
+IMAGE=../build/uboot_201801/u-boot.elf
+#IMAGE=/home/akashi/arm/armv8/linaro/misc/startup_Cortex-A32_GCC/startup_Cortex-A32_GCC.axf.org
 
 ROOTFSIMG=/opt/buildroot/16.11_64.ext4
 
@@ -73,9 +71,8 @@ if [ x$Dflag != x"" ] ; then
 fi
 
 if [ x$uflag != x"" ] ; then
-	FW_BIN=fip.bin.uboot
-	FW_BIN=fip_ca9x4.bin
-	FW_BIN=fip_a32.bin
+	FW_BIN=fip_a32_uboot.bin
+#	FW_BIN=fip_a32_nonsec.bin
 fi
 
 if [ x$dflag != x"" ] ; then
@@ -119,22 +116,6 @@ cd /home/akashi/arm/armv8/linaro/uefi
 ${SIM} ${MOPTS} ${IMAGES} \
 -C pctl.startup=0.0.0.0 \
 -C bp.secure_memory=0 \
--C cluster0.NUM_CORES=1 \
--C cluster0.has_el2=true \
--C cluster0.has_arm_v8-1=${HOSTv81} \
--C cluster0.has_arm_v8-2=${HOSTv82} \
--C cluster0.has_arm_v8-3=${HOSTv83} \
--C cluster0.has_16k_granule=1 \
--C cluster0.cpu0.CONFIG64=0 \
--C cluster0.cpu1.CONFIG64=0 \
--C cluster0.cpu2.CONFIG64=0 \
--C cluster0.cpu3.CONFIG64=0 \
--C cluster1.NUM_CORES=0 \
--C cluster1.has_el2=true \
--C cluster1.has_arm_v8-1=${HOSTv81} \
--C cluster1.has_arm_v8-2=${HOSTv82} \
--C cluster1.has_arm_v8-3=${HOSTv83} \
--C cluster1.has_16k_granule=1 \
 -C bp.tzc_400.diagnostics=1 \
 -C cache_state_modelled=0 \
 -C bp.pl011_uart0.uart_enable=1 \
@@ -154,6 +135,8 @@ ${SIM} ${MOPTS} ${IMAGES} \
 -C bp.secureflashloader.fname=${FW_DIR}/${BL1_BIN} \
 -C bp.flashloader0.fname=${LOADER}
 
+#-C bp.secureflashloader.fname=${LOADER}
+
 #-C bp.secureflashloader.fname=${FW_DIR}/${BL1_BIN} \
 
 # Verbose information
@@ -171,3 +154,13 @@ ${SIM} ${MOPTS} ${IMAGES} \
 #-C bp.virtioblockdevice.image_path=sd.img \
 #-C bp.mmc.p_mmc_file=sd1m.img \
 #-C bp.mmc.p_mmc_file=swap_512mFVP.img \
+
+# tmp
+#-C cluster1.NUM_CORES=0 \
+#-C cluster1.has_aarch64=false \
+#-C cluster1.has_el2=true \
+#-C cluster1.has_el3=true \
+#-C cluster1.has_arm_v8-1=${HOSTv81} \
+#-C cluster1.has_arm_v8-2=${HOSTv82} \
+#-C cluster1.has_arm_v8-3=${HOSTv83} \
+#-C cluster1.has_16k_granule=1 \

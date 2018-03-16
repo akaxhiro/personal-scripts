@@ -22,7 +22,8 @@ FW_BIN=fip.bin
 #   Ard's kaslr-capable uefi; See below
 #FW_BIN=/home/akashi/arm/armv8/linaro/uefi/ard/fip_fvp_kaslr.bin
 
-IMAGE=../build/ub_1501/u-boot.elf
+#IMAGE=../build/ub_1501/u-boot.elf
+IMAGE=../build/uboot_201801/u-boot.elf
 
 ROOTFSIMG=/opt/buildroot/16.11_64.ext4
 
@@ -57,6 +58,8 @@ do
 done
 shift `expr ${OPTIND} - 1`
 
+cd /home/akashi/arm/armv8/linaro/uefi
+
 if [ $# -ne 0 ] ; then
 KDIR=$1
 rm Image
@@ -65,9 +68,9 @@ rm /home/akashi/arm/armv8/linaro/build/kernel
 ln -s /home/akashi/arm/armv8/linaro/build/kernel_${KDIR} /home/akashi/arm/armv8/linaro/build/kernel
 fi
 
-if [ x$Dflag != x"" ] ; then
-	IMAGES="-a cluster0.*=${IMAGE} -a cluster1.*=${IMAGE}"
-fi
+#if [ x$Dflag != x"" ] ; then
+#	IMAGES="-a cluster0.*=${IMAGE} -a cluster1.*=${IMAGE}"
+#fi
 
 if [ x$uflag != x"" ] ; then
 	FW_BIN=fip.bin.uboot
@@ -109,8 +112,6 @@ else
 	HOSTv83=false
 fi
 
-cd /home/akashi/arm/armv8/linaro/uefi
-
 ${SIM} ${MOPTS} ${IMAGES} \
 -C pctl.startup=0.0.0.0 \
 -C bp.secure_memory=0 \
@@ -133,7 +134,7 @@ ${SIM} ${MOPTS} ${IMAGES} \
 -C bp.terminal_0.start_telnet=1 \
 -C bp.pl011_uart1.uart_enable=1 \
 -C bp.terminal_1.terminal_command="gnome-terminal --geometry=80x30+600+100" \
--C bp.terminal_1.start_telnet=0 \
+-C bp.terminal_1.start_telnet=1 \
 -C bp.pl011_uart2.uart_enable=1 \
 -C bp.terminal_2.terminal_command="gnome-terminal --geometry=80x30+700+200" \
 -C bp.terminal_2.start_telnet=0 \
@@ -144,6 +145,7 @@ ${SIM} ${MOPTS} ${IMAGES} \
 -C bp.mmc.p_mmc_file=${ROOTFSIMG} \
 -C bp.secureflashloader.fname=${FW_DIR}/${BL1_BIN} \
 -C bp.flashloader0.fname=${LOADER}
+
 
 #-C bp.secureflashloader.fname=${FW_DIR}/${BL1_BIN} \
 

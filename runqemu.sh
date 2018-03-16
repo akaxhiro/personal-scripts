@@ -30,11 +30,15 @@ NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-syst
 ###
 ### UEFI specific
 ###
-UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
+#UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
 #UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build.0619/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
 ### Ard's kaslr version for FVP
 # UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/ard/nt-fw.bin
 # UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/ard/QEMU_EFI.fd.KASLR
+
+UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build.0728/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
+#UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build/ArmVirtQemu-AARCH64/DEBUG_GCC5/FV/QEMU_EFI.fd
+
 
 BOOTBIN="-bios ${UEFI_PATH}"
 # BOOTBIN="-pflash flash_uefi.img -pflash flash_var.img"
@@ -54,6 +58,8 @@ CMDLINE="ip=dhcp loglevel=9 consolelog=9"
 
 #CMDLINE="${CMDLINE} S"
 #CMDLINE="${CMDLINE} init=/bin/sh"
+CMDLINE="${CMDLINE} crashkernel=256M"
+CMDLINE="${CMDLINE} initcall_debug"
 
 SWAPFILE=/home/akashi/arm/armv8/linaro/uefi/swap_512m.img
 
@@ -152,8 +158,8 @@ KERNBIN="-kernel ${IMAGE} ${DTB}"
 CMD="${SUDO} ${QEMU} ${DEBUG} \
 	-nographic ${SERIAL} \
 	-machine virt,gic-version=3,virtualization=on \
-	-cpu cortex-a57 -smp 2 \
-	-m 1024 \
+	-cpu cortex-a57 -smp 4 \
+	-m 512 \
 	-semihosting \
 	${NETWORK} \
 	${RFS9P} \
