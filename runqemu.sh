@@ -30,18 +30,24 @@ NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-syst
 ###
 ### UEFI specific
 ###
+
+# This has a pseudo random seed service.
+UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build.0728/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
+#UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build/ArmVirtQemu-AARCH64/DEBUG_GCC5/FV/QEMU_EFI.fd
+
+# old
 #UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
 #UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build.0619/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
 ### Ard's kaslr version for FVP
 # UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/ard/nt-fw.bin
 # UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/ard/QEMU_EFI.fd.KASLR
 
-UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build.0728/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
-#UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build/ArmVirtQemu-AARCH64/DEBUG_GCC5/FV/QEMU_EFI.fd
-
-
-BOOTBIN="-bios ${UEFI_PATH}"
-# BOOTBIN="-pflash flash_uefi.img -pflash flash_var.img"
+###
+### U-boot
+###
+#UBOOT_PATH=/home/akashi/arm/armv8/linaro/build/uboot_201805/u-boot.bin
+# please run create_flash.sh for extra env space
+UBOOT_PATH=/home/akashi/tmp/uboot_64/u-boot.bin
 
 
 ###
@@ -51,6 +57,7 @@ KDIR=none
 IMAGE=../build/kernel_${KDIR}/arch/arm64/boot/Image
 
 #DTB="-dtb /home/akashi/arm/armv8/linaro/uefi/atf/fdts/fvp-base-gicv3-psci.dtb"
+DTB="-dtb /home/akashi/tmp/uboot_64/fdt_qemu3.dtb"
 
 CMDLINE="ip=dhcp loglevel=9 consolelog=9"
 #CMDLINE="${CMDLINE} console=ttyAMA0 earlycon=pl011,0x90000000"
@@ -58,13 +65,13 @@ CMDLINE="ip=dhcp loglevel=9 consolelog=9"
 
 #CMDLINE="${CMDLINE} S"
 #CMDLINE="${CMDLINE} init=/bin/sh"
+#CMDLINE="${CMDLINE} initcall_debug"
 CMDLINE="${CMDLINE} crashkernel=256M"
-CMDLINE="${CMDLINE} initcall_debug"
 
 SWAPFILE=/home/akashi/arm/armv8/linaro/uefi/swap_512m.img
 
 print_usage() {
-	echo `basename $0` [-cdhkKlLntv9] [\<kernerl_name\>]
+	echo `basename $0` [-cdhkKlLntuv9] [\<kernerl_name\>]
 	echo "  c: enable crash dump"
 	echo "  d: turn on qemu debug"
 	echo "  h: enable hibernate (w/ swap dev)"
@@ -74,12 +81,13 @@ print_usage() {
 	echo "  L: direct linux boot"
 	echo "  n: no execute, echoing command"
 	echo "  t: console in telnet mode"
+	echo "  u: uboot"
 	echo "  v: virtio root filesystem"
 	echo "  9: 9P root filesystem"
 	exit 1
 }
 
-while getopts cdhkKlLntv9 OPT
+while getopts cdhkKlLntuv9 OPT
 do
 	case ${OPT} in
 	c) cflag=1;;
@@ -91,6 +99,7 @@ do
 	L) Lflag=1;;
 	n) nflag=1;;
 	t) tflag=1;;
+	u) uflag=1;;
 	v) vflag=1;;
 	9) R9flag=1;;
 	*) print_usage;;
@@ -101,6 +110,13 @@ shift `expr ${OPTIND} - 1`
 if [ $# -ne 0 ] ; then
 	KDIR=$1
 	IMAGE=/home/akashi/arm/armv8/linaro/build/kernel_${KDIR}/arch/arm64/boot/Image
+fi
+
+if [ x$uflag != x"" ] ; then
+#	BOOTBIN="-bios ${UBOOT_PATH}"
+	BOOTBIN="-drive file=${UBOOT_PATH},format=raw,if=pflash,index=0"
+else
+	BOOTBIN="-bios ${UEFI_PATH}"
 fi
 
 if [ x$hflag != x"" ] ; then
@@ -128,7 +144,8 @@ fi
 
 if [ x$cflag != x"" ] ; then
 	#CMDLINE="${CMDLINE} crashkernel=512M-2G:64M,2G-:128M"
-	CMDLINE="${CMDLINE} crashkernel=256M mem=512M"
+	#CMDLINE="${CMDLINE} crashkernel=256M mem=512M"
+	CMDLINE="${CMDLINE} crashkernel=128M"
 fi
 
 if [ x$Kflag != x"" ] ; then
@@ -155,6 +172,10 @@ cd /home/akashi/arm/armv8/linaro/uefi
 
 KERNBIN="-kernel ${IMAGE} ${DTB}"
 
+#	-drive if=pflash,index=1,format=raw,file=/opt/buildroot/16.11_64.vfat \
+#	-device ich9-ahci,id=ahci \
+#	-device ide-drive,drive=sata,bus=ahci.0 \
+
 CMD="${SUDO} ${QEMU} ${DEBUG} \
 	-nographic ${SERIAL} \
 	-machine virt,gic-version=3,virtualization=on \
@@ -164,6 +185,12 @@ CMD="${SUDO} ${QEMU} ${DEBUG} \
 	${NETWORK} \
 	${RFS9P} \
 	${VFS} \
+	-device ich9-ahci \
+	-device ide-drive,drive=my_hd \
+	-drive if=none,id=my_hd,format=raw,file=/opt/disk/uboot_ata.img \
+	-device sdhci-pci \
+	-device sd-card,drive=my_sd \
+	-drive if=none,id=my_sd,format=raw,file=/opt/disk/br_vfat.img \
 	${SWAPDEV}"
 
 if [ x$Lflag != x"" ] ; then
@@ -171,7 +198,7 @@ if [ x$Lflag != x"" ] ; then
 elif [ x$lflag != x"" ] ; then
 	${ECHO} ${CMD} ${BOOTBIN} ${KERNBIN} -append "${CMDLINE}"
 else
-	${ECHO} ${CMD} ${BOOTBIN}
+	${ECHO} ${CMD} ${BOOTBIN} ${DTB}
 fi
 
 #	-machine virt,dumpdtb=/tmp/qemu.dtb \

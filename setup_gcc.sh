@@ -32,6 +32,8 @@ while true ; do
 			CLANG_VERSION=$2; shift 2; ;;
 		5.0)
 			CLANG_VERSION=$2; shift 2; ;;
+		6.0)
+			CLANG_VERSION=$2; shift 2; ;;
 		*)
 			echo Clang version $2 not available
 			print_usage; unset CLANG_VERSION; shift 2; ;;
