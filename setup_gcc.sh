@@ -15,8 +15,8 @@ echo "setup_gcc [-b][-l clag-version][-v gcc-version] [32|64]"
 # unset POSIXLY_CORRECT
 
 # default version
-_VERSION=7.1
-CLANG_VERSION=
+_VERSION=7.2
+CLANG_VERSION=6.0
 
 while true ; do
 	case "$1" in

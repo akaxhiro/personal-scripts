@@ -6,12 +6,19 @@ SUDO=sudo
 #QEMU=qemu-system-aarch64
 QEMU=/home/akashi/bin/qemu-system-aarch64
 
+# no messages come out:
+#QEMU=/home/akashi/x86/build/qemu-system.v3/aarch64-softmmu/qemu-system-aarch64
+
 ROOTDIR=/opt/buildroot/16.11_64
 #ROOTDIR=/opt/ubuntu/16.04
 #ROOTDIR=/opt/debian/jessie
 #ROOTDIR=/media/akashi/root
 
 ROOTFSIMG=/opt/buildroot/16.11_64.ext4
+
+SATAIMG=/opt/disk/test_vfat.img
+#MMCIMG=/opt/disk/uboot_vfat2.img
+MMCIMG=/opt/disk/uboot_sct.img
 
 # qemu default network
 #hub 0
@@ -32,8 +39,9 @@ NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-syst
 ###
 
 # This has a pseudo random seed service.
-UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build.0728/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
-#UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build/ArmVirtQemu-AARCH64/DEBUG_GCC5/FV/QEMU_EFI.fd
+#UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build.0728/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
+#UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build.0206/ArmVirtQemu-AARCH64/DEBUG_GCC5/FV/QEMU_EFI.fd
+UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build/ArmVirtQemu-AARCH64/DEBUG_GCC5/FV/QEMU_EFI.fd
 
 # old
 #UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/edk2/Build/ArmVirtQemu-AARCH64/DEBUG_GCC49/FV/QEMU_EFI.fd
@@ -59,7 +67,8 @@ IMAGE=../build/kernel_${KDIR}/arch/arm64/boot/Image
 #DTB="-dtb /home/akashi/arm/armv8/linaro/uefi/atf/fdts/fvp-base-gicv3-psci.dtb"
 DTB="-dtb /home/akashi/tmp/uboot_64/fdt_qemu3.dtb"
 
-CMDLINE="ip=dhcp loglevel=9 consolelog=9"
+#CMDLINE="ip=dhcp loglevel=9 consolelog=9"
+CMDLINE="ip=192.168.10.11:192.168.10.1:192.168.10.1:255.255.255.0: loglevel=9 consolelog=9"
 #CMDLINE="${CMDLINE} console=ttyAMA0 earlycon=pl011,0x90000000"
 #CMDLINE="${CMDLINE} console=ttyAMA1 earlycon=pl011,0x90500000"
 
@@ -164,6 +173,13 @@ if [ x$nflag != x"" ] ; then
 	ECHO=echo
 fi
 
+DISKS="-device ich9-ahci,id=ahci \
+	-device ide-drive,drive=my_hd,bus=ahci.0 \
+	-drive if=none,id=my_hd,format=raw,file=${SATAIMG} \
+	-device sdhci-pci \
+	-device sd-card,drive=my_sd \
+	-drive if=none,id=my_sd,format=raw,file=${MMCIMG}"
+
 ###
 ###
 ###
@@ -173,25 +189,19 @@ cd /home/akashi/arm/armv8/linaro/uefi
 KERNBIN="-kernel ${IMAGE} ${DTB}"
 
 #	-drive if=pflash,index=1,format=raw,file=/opt/buildroot/16.11_64.vfat \
-#	-device ich9-ahci,id=ahci \
-#	-device ide-drive,drive=sata,bus=ahci.0 \
 
-CMD="${SUDO} ${QEMU} ${DEBUG} \
-	-nographic ${SERIAL} \
+CMD="${SUDO} ${QEMU} ${DEBUG} ${SERIAL} \
+	-nographic \
 	-machine virt,gic-version=3,virtualization=on \
-	-cpu cortex-a57 -smp 4 \
-	-m 512 \
+	-cpu cortex-a57 -smp 1 \
+	-m 1024 \
 	-semihosting \
 	${NETWORK} \
 	${RFS9P} \
 	${VFS} \
-	-device ich9-ahci \
-	-device ide-drive,drive=my_hd \
-	-drive if=none,id=my_hd,format=raw,file=/opt/disk/uboot_ata.img \
-	-device sdhci-pci \
-	-device sd-card,drive=my_sd \
-	-drive if=none,id=my_sd,format=raw,file=/opt/disk/br_vfat.img \
-	${SWAPDEV}"
+	${DISKS} \
+	${SWAPDEV} \
+	-rtc base=utc"
 
 if [ x$Lflag != x"" ] ; then
 	${ECHO} ${CMD} ${KERNBIN} -append "${CMDLINE}"
@@ -210,7 +220,9 @@ fi
 
 #-machine virt -cpu cortex-a57 \
 #-machine virt -cpu cortex-a57 -machine type=virt \
+#-machine virt-2.12,gic-version=3,virtualization=on \
 
 # alternatives are:
 #-serial stdio \
 #-curses \
+#-nographic \

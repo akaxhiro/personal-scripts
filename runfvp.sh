@@ -9,8 +9,12 @@ SIM=${FVP_PATH}/FVP_Base_AEMv8A-AEMv8A
 QEMU=/home/akashi/bin/qemu-system-aarch64
 
 # new for supporting KASLR
-FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build/fvp/debug
-FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build.0804/fvp/debug
+
+# 2018.8.30, console doesnt show any messages
+#FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build/fvp/release
+
+FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build.0206/fvp/debug
+#FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build.0804/fvp/debug
 # old, but fine
 # use the old one for kgdb due to ttyAMA1
 #   and specify console=ttyAMA0
@@ -26,7 +30,8 @@ FW_BIN=fip.bin
 #IMAGE=../build/ub_1501/u-boot.elf
 IMAGE=../build/uboot_201801/u-boot.elf
 
-ROOTFSIMG=/opt/buildroot/16.11_64.ext4
+#ROOTFSIMG=/opt/buildroot/16.11_64.ext4
+ROOTFSIMG=/opt/disk/tmp_fat.img
 
 print_usage() {
 	echo `basename $0` [-Ddgkuv123] [<kernerl_name>]
