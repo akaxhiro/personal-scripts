@@ -16,9 +16,10 @@ ROOTDIR=/opt/buildroot/16.11_64
 
 ROOTFSIMG=/opt/buildroot/16.11_64.ext4
 
-SATAIMG=/opt/disk/test_vfat.img
-#MMCIMG=/opt/disk/uboot_vfat2.img
+#SATAIMG=/opt/disk/test_vfat.img
+SATAIMG=/opt/disk/uboot_bootdev.img
 MMCIMG=/opt/disk/uboot_sct.img
+USBIMG=/opt/disk/ubuntu-18.04.1-server-arm64.iso
 
 # qemu default network
 #hub 0
@@ -80,7 +81,7 @@ CMDLINE="${CMDLINE} crashkernel=256M"
 SWAPFILE=/home/akashi/arm/armv8/linaro/uefi/swap_512m.img
 
 print_usage() {
-	echo `basename $0` [-cdhkKlLntuv9] [\<kernerl_name\>]
+	echo `basename $0` [-cdhkKlLntuUv9] [\<kernerl_name\>]
 	echo "  c: enable crash dump"
 	echo "  d: turn on qemu debug"
 	echo "  h: enable hibernate (w/ swap dev)"
@@ -91,12 +92,13 @@ print_usage() {
 	echo "  n: no execute, echoing command"
 	echo "  t: console in telnet mode"
 	echo "  u: uboot"
+	echo "  U: usb storage"
 	echo "  v: virtio root filesystem"
 	echo "  9: 9P root filesystem"
 	exit 1
 }
 
-while getopts cdhkKlLntuv9 OPT
+while getopts cdhkKlLntuUv9 OPT
 do
 	case ${OPT} in
 	c) cflag=1;;
@@ -109,6 +111,7 @@ do
 	n) nflag=1;;
 	t) tflag=1;;
 	u) uflag=1;;
+	U) Uflag=1;;
 	v) vflag=1;;
 	9) R9flag=1;;
 	*) print_usage;;
@@ -173,12 +176,29 @@ if [ x$nflag != x"" ] ; then
 	ECHO=echo
 fi
 
-DISKS="-device ich9-ahci,id=ahci \
+SATADISK="-device ich9-ahci,id=ahci \
 	-device ide-drive,drive=my_hd,bus=ahci.0 \
-	-drive if=none,id=my_hd,format=raw,file=${SATAIMG} \
-	-device sdhci-pci \
+	-drive if=none,id=my_hd,format=raw,file=${SATAIMG}"
+MMCDISK=" -device sdhci-pci \
 	-device sd-card,drive=my_sd \
 	-drive if=none,id=my_sd,format=raw,file=${MMCIMG}"
+USBDISK="-device usb-ehci,id=ehci \
+	-device usb-kbd,port=1 \
+	-device usb-storage,drive=my_usbmass \
+	-drive if=none,id=my_usbmass,format=raw,file=${USBIMG}"
+
+DISKS=""
+if [ x${SATAIMG} != x"" ] ; then
+	DISKS="${DISKS} ${SATADISK}"
+fi
+if [ x${MMCIMG} != x"" ] ; then
+	DISKS="${DISKS} ${MMCDISK}"
+fi
+if [ x${Uflag} != x"" ] ; then
+  if [ x${USBIMG} != x"" ] ; then
+	  DISKS="${DISKS} ${USBDISK}"
+  fi
+fi
 
 ###
 ###

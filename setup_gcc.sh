@@ -15,7 +15,7 @@ echo "setup_gcc [-b][-l clag-version][-v gcc-version] [32|64]"
 # unset POSIXLY_CORRECT
 
 # default version
-_VERSION=7.2
+_VERSION=7.3
 CLANG_VERSION=6.0
 
 while true ; do
@@ -44,13 +44,11 @@ while true ; do
 			_VERSION=$2; shift 2; ;;
 		5.4)
 			_VERSION=$2; shift 2; ;;
-		6.3)
-			_VERSION=$2; shift 2; ;;
 		6.4)
 			_VERSION=$2; shift 2; ;;
-		7.1)
+		7.3)
 			_VERSION=$2; shift 2; ;;
-		7.2)
+		8.2)
 			_VERSION=$2; shift 2; ;;
 		*)
 			echo Version $2 not available
@@ -70,23 +68,17 @@ if [[ $# == 0 || $1 == "64" ]] ; then
 ARCH=arm64
 CROSS_COMPILE=aarch64${BE}-linux-gnu-
 #CS_ROOT=/opt/linaro/gcc-${_VERSION}-aarch64${BE}
-CS_ROOT=/opt/gcc/gcc-${_VERSION}-aarch64
 
-PATH=${CS_ROOT}/bin:${CS_ROOT}${BE}/bin:$PATH
-MANPATH=${CS_ROOT}/share/man:$MANPATH
-
-PS1=${_VERSION}_64${BE}-$PS1
+PS1=`echo ${PS1} | sed 's/^.*\.*_*-//'`
+PS1="${_VERSION}_64${BE}-$PS1 "
 
 elif [[ $1 == 32 ]] ; then
 ARCH=arm
 CROSS_COMPILE=arm${EB}-linux-gnueabihf-
 #CS_ROOT=/opt/linaro/gcc-${_VERSION}-arm${EB}
-CS_ROOT=/opt/gcc/gcc-${_VERSION}-arm
 
-PATH=${CS_ROOT}/bin:${CS_ROOT}${BE}/bin:$PATH
-MANPATH=${CS_ROOT}/share/man:$MANPATH
-
-PS1=${_VERSION}_32${EB}-$PS1
+PS1=`echo ${PS1} | sed 's/^.*\.*_*-//'`
+PS1="${_VERSION}_32${EB}-$PS1 "
 
 else
 	print_usage
@@ -94,8 +86,24 @@ else
 	exit 1
 fi
 
+# 64
+CS_ROOT=/opt/gcc/gcc-${_VERSION}-aarch64${BE}
+if ! $(echo ${PATH} | grep -q ${CS_ROOT}) ; then
+  PATH=${CS_ROOT}/bin:$PATH
+  MANPATH=${CS_ROOT}/share/man:$MANPATH
+fi
+# 32
+CS_ROOT=/opt/gcc/gcc-${_VERSION}-arm${BE}
+if ! $(echo ${PATH} | grep -q ${CS_ROOT}) ; then
+  PATH=${CS_ROOT}/bin:$PATH
+  MANPATH=${CS_ROOT}/share/man:$MANPATH
+fi
+
 if [ "${CLANG_VERSION}" != "" ] ; then
-	PATH=/opt/clang/clang-${CLANG_VERSION}/bin:$PATH
+  CS_ROOT=/opt/clang/clang-${CLANG_VERSION}
+  if ! $(echo ${PATH} | grep -q ${CS_ROOT}) ; then
+    PATH=${CS_ROOT}/bin:$PATH
+  fi
 fi
 
 # echo $ARCH

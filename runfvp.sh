@@ -10,10 +10,12 @@ QEMU=/home/akashi/bin/qemu-system-aarch64
 
 # new for supporting KASLR
 
-# 2018.8.30, console doesnt show any messages
-#FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build/fvp/release
+# 2018.8.30, console doesnt show any messages -> No problem. Use this.
+FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build/fvp/release
 
-FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build.0206/fvp/debug
+# With this, assertion failure around pl011:237 at kdump
+#FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build.0206/fvp/debug
+
 #FW_DIR=/home/akashi/arm/armv8/linaro/uefi/atf/build.0804/fvp/debug
 # old, but fine
 # use the old one for kgdb due to ttyAMA1
