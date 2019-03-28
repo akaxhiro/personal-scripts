@@ -66,7 +66,7 @@ KDIR=none
 IMAGE=../build/kernel_${KDIR}/arch/arm64/boot/Image
 
 #DTB="-dtb /home/akashi/arm/armv8/linaro/uefi/atf/fdts/fvp-base-gicv3-psci.dtb"
-DTB="-dtb /home/akashi/tmp/uboot_64/fdt_qemu3.dtb"
+#DTB="-dtb /home/akashi/tmp/uboot_64/fdt_qemu3.dtb"
 
 #CMDLINE="ip=dhcp loglevel=9 consolelog=9"
 CMDLINE="ip=192.168.10.11:192.168.10.1:192.168.10.1:255.255.255.0: loglevel=9 consolelog=9"
@@ -125,8 +125,8 @@ if [ $# -ne 0 ] ; then
 fi
 
 if [ x$uflag != x"" ] ; then
-#	BOOTBIN="-bios ${UBOOT_PATH}"
-	BOOTBIN="-drive file=${UBOOT_PATH},format=raw,if=pflash,index=0"
+	BOOTBIN="-bios ${UBOOT_PATH}"
+#	BOOTBIN="-drive file=${UBOOT_PATH},format=raw,if=pflash,index=0"
 else
 	BOOTBIN="-bios ${UEFI_PATH}"
 fi

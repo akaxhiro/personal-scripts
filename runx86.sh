@@ -24,9 +24,9 @@ UEFIFILE_VAR="/home/akashi/x86/OVMF_VARS.fd"
 
 #BUILD_ROM=y make O=...
 #UBOOT_PATH=/home/akashi/x86/build/uboot_sct/u-boot.rom
-UBOOT_PATH=/home/akashi/x86/build/uboot_201807/u-boot.rom
-UBOOT_PATH=/home/akashi/x86/build/uboot_sct/u-boot.rom
 #UBOOT_PATH=/home/akashi/x86/build/uboot_sct_32/u-boot.rom
+#UBOOT_PATH=/home/akashi/x86/build/uboot_efi/u-boot.rom
+UBOOT_PATH=/home/akashi/x86/build/uboot_qemu/u-boot.rom
 
 # default
 KERNFILE="/home/akashi/x86/build/kernel_416/arch/x86/boot/bzImage"

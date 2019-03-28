@@ -48,6 +48,8 @@ while true ; do
 			_VERSION=$2; shift 2; ;;
 		7.3)
 			_VERSION=$2; shift 2; ;;
+		7.4)
+			_VERSION=$2; shift 2; ;;
 		8.2)
 			_VERSION=$2; shift 2; ;;
 		*)
