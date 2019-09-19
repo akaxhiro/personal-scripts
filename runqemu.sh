@@ -4,7 +4,9 @@
 SUDO=sudo
 
 #QEMU=qemu-system-aarch64
-QEMU=/home/akashi/bin/qemu-system-aarch64
+QEMU=/home/akashi/x86/build/qemu-system.v3/aarch64-softmmu/qemu-system-aarch64
+#QEMU=/home/akashi/bin/qemu-system-aarch64
+GICV=3
 
 # no messages come out:
 #QEMU=/home/akashi/x86/build/qemu-system.v3/aarch64-softmmu/qemu-system-aarch64
@@ -17,9 +19,18 @@ ROOTDIR=/opt/buildroot/16.11_64
 ROOTFSIMG=/opt/buildroot/16.11_64.ext4
 
 #SATAIMG=/opt/disk/test_vfat.img
-SATAIMG=/opt/disk/uboot_bootdev.img
-MMCIMG=/opt/disk/uboot_sct.img
-USBIMG=/opt/disk/ubuntu-18.04.1-server-arm64.iso
+SATAIMG=/opt/disk/test_vfat256M.img
+#SATAIMG=/opt/disk/uboot_bootdev.img
+#SATAIMG=/opt/disk/heinrich-sct-arm64.img.2MB
+
+SATAIMG2=/opt/disk/uboot_sct.img
+#SATAIMG2=/opt/disk/uboot_sct.img_bad
+#SATAIMG2=/opt/disk/uboot_bootdev2.img
+
+#MMCIMG=/opt/disk/uboot_sct.img
+#MMCIMG=/opt/disk/test_vfat.img
+#USBIMG=/opt/disk/ubuntu-18.04.1-server-arm64.iso
+MMCIMG=/opt/disk/uboot_efi_env.img
 
 # qemu default network
 #hub 0
@@ -33,6 +44,7 @@ USBIMG=/opt/disk/ubuntu-18.04.1-server-arm64.iso
 #NETWORK="-netdev tap,id=mynet0,script=/etc/my-qemu-ifup,downscript=/etc/my-qemu-ifdown -device virtio-net-device,netdev=mynet0"
 
 NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-system/qemu-bridge-helper -device virtio-net-pci,netdev=hn0"
+#NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-system/qemu-bridge-helper -device e1000,netdev=hn0"
 
 
 ###
@@ -57,13 +69,21 @@ UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build/ArmVirtQemu-AARCH64/DEBUG_GCC
 #UBOOT_PATH=/home/akashi/arm/armv8/linaro/build/uboot_201805/u-boot.bin
 # please run create_flash.sh for extra env space
 UBOOT_PATH=/home/akashi/tmp/uboot_64/u-boot.bin
+# for ATF,
+# for old build.0830
+#ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/bl1.bin64
+#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/fip_uboot.bin64
+# for secboot
+ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/bl1.bin64
+#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_ubootsec.bin64
+FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_atfboot.bin64
 
 
 ###
 ### Linux loading
 ###
 KDIR=none
-IMAGE=../build/kernel_${KDIR}/arch/arm64/boot/Image
+IMAGE=/home/akashi/arm/armv8/linaro/build/kernel_${KDIR}/arch/arm64/boot/Image
 
 #DTB="-dtb /home/akashi/arm/armv8/linaro/uefi/atf/fdts/fvp-base-gicv3-psci.dtb"
 #DTB="-dtb /home/akashi/tmp/uboot_64/fdt_qemu3.dtb"
@@ -81,7 +101,7 @@ CMDLINE="${CMDLINE} crashkernel=256M"
 SWAPFILE=/home/akashi/arm/armv8/linaro/uefi/swap_512m.img
 
 print_usage() {
-	echo `basename $0` [-cdhkKlLntuUv9] [\<kernerl_name\>]
+	echo `basename $0` [-cdhkKlLnstuUv9] [\<kernerl_name\>]
 	echo "  c: enable crash dump"
 	echo "  d: turn on qemu debug"
 	echo "  h: enable hibernate (w/ swap dev)"
@@ -90,6 +110,7 @@ print_usage() {
 	echo "  l: uefi + linux boot"
 	echo "  L: direct linux boot"
 	echo "  n: no execute, echoing command"
+	echo "  s: secure boot with atf"
 	echo "  t: console in telnet mode"
 	echo "  u: uboot"
 	echo "  U: usb storage"
@@ -98,7 +119,7 @@ print_usage() {
 	exit 1
 }
 
-while getopts cdhkKlLntuUv9 OPT
+while getopts cdhkKlLnstuUv9 OPT
 do
 	case ${OPT} in
 	c) cflag=1;;
@@ -109,6 +130,7 @@ do
 	l) lflag=1;;
 	L) Lflag=1;;
 	n) nflag=1;;
+	s) sflag=1;;
 	t) tflag=1;;
 	u) uflag=1;;
 	U) Uflag=1;;
@@ -125,10 +147,25 @@ if [ $# -ne 0 ] ; then
 fi
 
 if [ x$uflag != x"" ] ; then
-	BOOTBIN="-bios ${UBOOT_PATH}"
-#	BOOTBIN="-drive file=${UBOOT_PATH},format=raw,if=pflash,index=0"
+  if [ x$sflag != x"" ] ; then
+	BOOTBIN="-drive file=${ATF_PATH},format=raw,if=pflash,index=0"
+	BOOTBIN="${BOOTBIN} -drive file=${FIP_PATH},format=raw,if=pflash,index=1"
+	GICV=2
+	SECURE="secure=on"
+  else
+	BOOTBIN="-drive file=${UBOOT_PATH},format=raw,if=pflash,index=0"
+#	BOOTBIN="-bios ${UBOOT_PATH}"
+  fi
 else
+  if [ x$sflag != x"" ] ; then
+FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/fip_edk2.bin64
+	BOOTBIN="-drive file=${ATF_PATH},format=raw,if=pflash,index=0"
+#	BOOTBIN="${BOOTBIN} -drive file=${FIP_PATH},format=raw,if=pflash,index=1"
+	GICV=2
+	SECURE="secure=on"
+  else
 	BOOTBIN="-bios ${UEFI_PATH}"
+  fi
 fi
 
 if [ x$hflag != x"" ] ; then
@@ -179,9 +216,14 @@ fi
 SATADISK="-device ich9-ahci,id=ahci \
 	-device ide-drive,drive=my_hd,bus=ahci.0 \
 	-drive if=none,id=my_hd,format=raw,file=${SATAIMG}"
+SATADISK2="-device ide-drive,drive=my_hd2,bus=ahci.1 \
+	-drive if=none,id=my_hd2,format=raw,file=${SATAIMG2}"
 MMCDISK=" -device sdhci-pci \
 	-device sd-card,drive=my_sd \
 	-drive if=none,id=my_sd,format=raw,file=${MMCIMG}"
+#MMCDISK=" -device sd-card,id=sd0 \
+#	-drive if=none,id=sd0,format=raw,file=${MMCIMG}"
+#MMCDISK=" -drive if=none,id=sd1,format=raw,file=${MMCIMG}"
 USBDISK="-device usb-ehci,id=ehci \
 	-device usb-kbd,port=1 \
 	-device usb-storage,drive=my_usbmass \
@@ -190,6 +232,9 @@ USBDISK="-device usb-ehci,id=ehci \
 DISKS=""
 if [ x${SATAIMG} != x"" ] ; then
 	DISKS="${DISKS} ${SATADISK}"
+fi
+if [ x${SATAIMG2} != x"" ] ; then
+	DISKS="${DISKS} ${SATADISK2}"
 fi
 if [ x${MMCIMG} != x"" ] ; then
 	DISKS="${DISKS} ${MMCDISK}"
@@ -205,6 +250,7 @@ fi
 ###
 
 cd /home/akashi/arm/armv8/linaro/uefi
+#cd /home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug
 
 KERNBIN="-kernel ${IMAGE} ${DTB}"
 
@@ -212,16 +258,19 @@ KERNBIN="-kernel ${IMAGE} ${DTB}"
 
 CMD="${SUDO} ${QEMU} ${DEBUG} ${SERIAL} \
 	-nographic \
-	-machine virt,gic-version=3,virtualization=on \
-	-cpu cortex-a57 -smp 1 \
-	-m 1024 \
+	-machine virt,gic-version=${GICV},virtualization=on,${SECURE} \
+	-cpu cortex-a57 -smp 4 \
+	-m 384 \
 	-semihosting \
 	${NETWORK} \
 	${RFS9P} \
 	${VFS} \
 	${DISKS} \
-	${SWAPDEV} \
-	-rtc base=utc"
+	${SWAPDEV}"
+#	-rtc base=utc"
+
+#	for system's old qemu,
+#	-machine virt,${SECURE} \
 
 if [ x$Lflag != x"" ] ; then
 	${ECHO} ${CMD} ${KERNBIN} -append "${CMDLINE}"

@@ -52,6 +52,8 @@ while true ; do
 			_VERSION=$2; shift 2; ;;
 		8.2)
 			_VERSION=$2; shift 2; ;;
+		8.3)
+			_VERSION=$2; shift 2; ;;
 		*)
 			echo Version $2 not available
 			print_usage; unset _VERSION; shift 2; ;;
