@@ -18,6 +18,8 @@ echo "setup_gcc [-b][-l clag-version][-v gcc-version] [32|64]"
 _VERSION=7.3
 CLANG_VERSION=6.0
 
+NONE=
+
 while true ; do
 	case "$1" in
 	-b)
@@ -50,10 +52,10 @@ while true ; do
 			_VERSION=$2; shift 2; ;;
 		7.4)
 			_VERSION=$2; shift 2; ;;
-		8.2)
-			_VERSION=$2; shift 2; ;;
 		8.3)
 			_VERSION=$2; shift 2; ;;
+		9.2)
+			_VERSION=$2; shift 2; NONE=none-; ;;
 		*)
 			echo Version $2 not available
 			print_usage; unset _VERSION; shift 2; ;;
@@ -70,7 +72,7 @@ done
 if [[ $# == 0 || $1 == "64" ]] ; then
 # by default, 64-bits
 ARCH=arm64
-CROSS_COMPILE=aarch64${BE}-linux-gnu-
+CROSS_COMPILE=aarch64${BE}-${NONE}linux-gnu-
 #CS_ROOT=/opt/linaro/gcc-${_VERSION}-aarch64${BE}
 
 PS1=`echo ${PS1} | sed 's/^.*\.*_*-//'`
@@ -78,7 +80,7 @@ PS1="${_VERSION}_64${BE}-$PS1 "
 
 elif [[ $1 == 32 ]] ; then
 ARCH=arm
-CROSS_COMPILE=arm${EB}-linux-gnueabihf-
+CROSS_COMPILE=arm${EB}-${NONE}linux-gnueabihf-
 #CS_ROOT=/opt/linaro/gcc-${_VERSION}-arm${EB}
 
 PS1=`echo ${PS1} | sed 's/^.*\.*_*-//'`
