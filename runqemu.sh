@@ -4,28 +4,36 @@
 SUDO=sudo
 
 #QEMU=qemu-system-aarch64
-QEMU=/home/akashi/x86/build/qemu-system.v3/aarch64-softmmu/qemu-system-aarch64
+QEMU=/usr/bin/qemu-system-aarch64
 #QEMU=/home/akashi/bin/qemu-system-aarch64
+#QEMU=/home/akashi/x86/build/qemu-system.v3/aarch64-softmmu/qemu-system-aarch64
+##QEMU=/home/akashi/x86/build/qemu-system.v4/aarch64-softmmu/qemu-system-aarch64
 GICV=3
+#VIRT=on
+VIRT=off
 
 # no messages come out:
 #QEMU=/home/akashi/x86/build/qemu-system.v3/aarch64-softmmu/qemu-system-aarch64
 
-ROOTDIR=/opt/buildroot/16.11_64
-#ROOTDIR=/opt/ubuntu/16.04
+#ROOTDIR=/opt/buildroot/16.11_64
+ROOTDIR=/opt/ubuntu/16.04
 #ROOTDIR=/opt/debian/jessie
 #ROOTDIR=/media/akashi/root
 
 ROOTFSIMG=/opt/buildroot/16.11_64.ext4
 
 #SATAIMG=/opt/disk/test_vfat.img
-SATAIMG=/opt/disk/test_vfat256M.img
-#SATAIMG=/opt/disk/uboot_bootdev.img
+#SATAIMG=/opt/disk/test_vfat256M.img
+SATAIMG=/opt/disk/uboot_bootdev.img
 #SATAIMG=/opt/disk/heinrich-sct-arm64.img.2MB
+#SATAIMG=/opt/disk/test_fat_dospart.img
+#SATAIMG=/tmp/mmc-fat-part
+#SATAIMG=/tmp/image-file
 
 SATAIMG2=/opt/disk/uboot_sct.img
 #SATAIMG2=/opt/disk/uboot_sct.img_bad
 #SATAIMG2=/opt/disk/uboot_bootdev2.img
+#SATAIMG2=/opt/disk/test_ext4.img
 
 #MMCIMG=/opt/disk/uboot_sct.img
 #MMCIMG=/opt/disk/test_vfat.img
@@ -71,12 +79,14 @@ UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build/ArmVirtQemu-AARCH64/DEBUG_GCC
 UBOOT_PATH=/home/akashi/tmp/uboot_64/u-boot.bin
 # for ATF,
 # for old build.0830
-#ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/bl1.bin64
-#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/fip_uboot.bin64
+ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/bl1.bin64
+FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/fip_uboot.bin64
 # for secboot
-ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/bl1.bin64
+#ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/bl1.bin64
 #FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_ubootsec.bin64
-FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_atfboot.bin64
+#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_ubootsec1910.bin64
+#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_uboot1910.bin64
+#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_atfboot.bin64
 
 
 ###
@@ -88,12 +98,12 @@ IMAGE=/home/akashi/arm/armv8/linaro/build/kernel_${KDIR}/arch/arm64/boot/Image
 #DTB="-dtb /home/akashi/arm/armv8/linaro/uefi/atf/fdts/fvp-base-gicv3-psci.dtb"
 #DTB="-dtb /home/akashi/tmp/uboot_64/fdt_qemu3.dtb"
 
-#CMDLINE="ip=dhcp loglevel=9 consolelog=9"
-CMDLINE="ip=192.168.10.11:192.168.10.1:192.168.10.1:255.255.255.0: loglevel=9 consolelog=9"
+CMDLINE="ip=dhcp loglevel=9 consolelog=9"
+#CMDLINE="ip=192.168.10.11:192.168.10.1:192.168.10.1:255.255.255.0: loglevel=9 consolelog=9"
 #CMDLINE="${CMDLINE} console=ttyAMA0 earlycon=pl011,0x90000000"
 #CMDLINE="${CMDLINE} console=ttyAMA1 earlycon=pl011,0x90500000"
 
-#CMDLINE="${CMDLINE} S"
+CMDLINE="${CMDLINE} S"
 #CMDLINE="${CMDLINE} init=/bin/sh"
 #CMDLINE="${CMDLINE} initcall_debug"
 CMDLINE="${CMDLINE} crashkernel=256M"
@@ -151,6 +161,7 @@ if [ x$uflag != x"" ] ; then
 	BOOTBIN="-drive file=${ATF_PATH},format=raw,if=pflash,index=0"
 	BOOTBIN="${BOOTBIN} -drive file=${FIP_PATH},format=raw,if=pflash,index=1"
 	GICV=2
+#	GICV=3
 	SECURE="secure=on"
   else
 	BOOTBIN="-drive file=${UBOOT_PATH},format=raw,if=pflash,index=0"
@@ -258,9 +269,9 @@ KERNBIN="-kernel ${IMAGE} ${DTB}"
 
 CMD="${SUDO} ${QEMU} ${DEBUG} ${SERIAL} \
 	-nographic \
-	-machine virt,gic-version=${GICV},virtualization=on,${SECURE} \
+	-machine virt,gic-version=${GICV},virtualization=${VIRT},${SECURE} \
 	-cpu cortex-a57 -smp 4 \
-	-m 384 \
+	-m 512 \
 	-semihosting \
 	${NETWORK} \
 	${RFS9P} \
@@ -290,6 +301,7 @@ fi
 #-machine virt -cpu cortex-a57 \
 #-machine virt -cpu cortex-a57 -machine type=virt \
 #-machine virt-2.12,gic-version=3,virtualization=on \
+#	-machine virt,gic-version=${GICV},virtualization=on,${SECURE} \
 
 # alternatives are:
 #-serial stdio \
