@@ -4,13 +4,17 @@
 SUDO=sudo
 
 #QEMU=qemu-system-aarch64
-QEMU=/usr/bin/qemu-system-aarch64
+#QEMU=/usr/bin/qemu-system-aarch64
 #QEMU=/home/akashi/bin/qemu-system-aarch64
 #QEMU=/home/akashi/x86/build/qemu-system.v3/aarch64-softmmu/qemu-system-aarch64
-##QEMU=/home/akashi/x86/build/qemu-system.v4/aarch64-softmmu/qemu-system-aarch64
+QEMU=/home/akashi/x86/build/qemu-system.v4/aarch64-softmmu/qemu-system-aarch64
+
+# due to TF-A:drivers/arm/gic/v2/gicv2_main.c
+#GICV=2
 GICV=3
-#VIRT=on
-VIRT=off
+
+VIRT=on
+#VIRT=off
 
 # no messages come out:
 #QEMU=/home/akashi/x86/build/qemu-system.v3/aarch64-softmmu/qemu-system-aarch64
@@ -22,23 +26,29 @@ ROOTDIR=/opt/ubuntu/16.04
 
 ROOTFSIMG=/opt/buildroot/16.11_64.ext4
 
+#
+FLASH1_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/flash1.img
+
 #SATAIMG=/opt/disk/test_vfat.img
 #SATAIMG=/opt/disk/test_vfat256M.img
 SATAIMG=/opt/disk/uboot_bootdev.img
+
 #SATAIMG=/opt/disk/heinrich-sct-arm64.img.2MB
 #SATAIMG=/opt/disk/test_fat_dospart.img
 #SATAIMG=/tmp/mmc-fat-part
 #SATAIMG=/tmp/image-file
 
-SATAIMG2=/opt/disk/uboot_sct.img
+#SATAIMG2=/opt/disk/uboot_sct.img
 #SATAIMG2=/opt/disk/uboot_sct.img_bad
-#SATAIMG2=/opt/disk/uboot_bootdev2.img
+SATAIMG2=/opt/disk/uboot_bootdev2.img
 #SATAIMG2=/opt/disk/test_ext4.img
 
 #MMCIMG=/opt/disk/uboot_sct.img
 #MMCIMG=/opt/disk/test_vfat.img
 #USBIMG=/opt/disk/ubuntu-18.04.1-server-arm64.iso
-MMCIMG=/opt/disk/uboot_efi_env.img
+#MMCIMG=/opt/disk/uboot_efi_env.img
+
+#HD0=/home/akashi/tmp/xen_work/xenial-server-cloudimg-arm64-uefi1.img
 
 # qemu default network
 #hub 0
@@ -51,7 +61,7 @@ MMCIMG=/opt/disk/uboot_efi_env.img
 # sync with /etc/my-qmeu-if[up|down]
 #NETWORK="-netdev tap,id=mynet0,script=/etc/my-qemu-ifup,downscript=/etc/my-qemu-ifdown -device virtio-net-device,netdev=mynet0"
 
-NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-system/qemu-bridge-helper -device virtio-net-pci,netdev=hn0"
+#NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-system/qemu-bridge-helper -device virtio-net-pci,netdev=hn0"
 #NETWORK="-netdev bridge,br=armbr0,id=hn0,helper=/home/akashi/x86/build/qemu-system/qemu-bridge-helper -device e1000,netdev=hn0"
 
 
@@ -79,14 +89,15 @@ UEFI_PATH=/home/akashi/arm/armv8/linaro/uefi/Build/ArmVirtQemu-AARCH64/DEBUG_GCC
 UBOOT_PATH=/home/akashi/tmp/uboot_64/u-boot.bin
 # for ATF,
 # for old build.0830
-ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/bl1.bin64
-FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/fip_uboot.bin64
+#ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/bl1.bin64
+#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build.0830/qemu/debug/fip_uboot.bin64
 # for secboot
+ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/bl1.bin64
+ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/bl1.bin
+FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/fip_uboot_secb.bin64
+# for Maxim test
 #ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/bl1.bin64
-#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_ubootsec.bin64
-#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_ubootsec1910.bin64
-#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_uboot1910.bin64
-#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_atfboot.bin64
+#FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/release/fip_uboot2004.bin64
 
 
 ###
@@ -158,10 +169,11 @@ fi
 
 if [ x$uflag != x"" ] ; then
   if [ x$sflag != x"" ] ; then
-	BOOTBIN="-drive file=${ATF_PATH},format=raw,if=pflash,index=0"
-	BOOTBIN="${BOOTBIN} -drive file=${FIP_PATH},format=raw,if=pflash,index=1"
-	GICV=2
-#	GICV=3
+	ATF_CD="cd $(dirname ${ATF_PATH})"
+#	BOOTBIN="-drive file=${ATF_PATH},format=raw,if=pflash,index=0"
+	BOOTBIN="-bios ${ATF_PATH}"
+#	BOOTBIN="${BOOTBIN} -drive file=${FIP_PATH},format=raw,if=pflash,index=1"
+	BOOTBIN="${BOOTBIN} -drive file=${FLASH1_PATH},format=raw,if=pflash,index=1"
 	SECURE="secure=on"
   else
 	BOOTBIN="-drive file=${UBOOT_PATH},format=raw,if=pflash,index=0"
@@ -169,10 +181,8 @@ if [ x$uflag != x"" ] ; then
   fi
 else
   if [ x$sflag != x"" ] ; then
-FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/fip_edk2.bin64
 	BOOTBIN="-drive file=${ATF_PATH},format=raw,if=pflash,index=0"
-#	BOOTBIN="${BOOTBIN} -drive file=${FIP_PATH},format=raw,if=pflash,index=1"
-	GICV=2
+	BOOTBIN="${BOOTBIN} -drive file=${FIP_PATH},format=raw,if=pflash,index=1"
 	SECURE="secure=on"
   else
 	BOOTBIN="-bios ${UEFI_PATH}"
@@ -232,13 +242,14 @@ SATADISK2="-device ide-drive,drive=my_hd2,bus=ahci.1 \
 MMCDISK=" -device sdhci-pci \
 	-device sd-card,drive=my_sd \
 	-drive if=none,id=my_sd,format=raw,file=${MMCIMG}"
+VDISK="-drive if=none,file=${HD0},id=hd0 -device virtio-blk-device,drive=hd0"
 #MMCDISK=" -device sd-card,id=sd0 \
 #	-drive if=none,id=sd0,format=raw,file=${MMCIMG}"
 #MMCDISK=" -drive if=none,id=sd1,format=raw,file=${MMCIMG}"
-USBDISK="-device usb-ehci,id=ehci \
-	-device usb-kbd,port=1 \
-	-device usb-storage,drive=my_usbmass \
-	-drive if=none,id=my_usbmass,format=raw,file=${USBIMG}"
+#USBDISK="-device usb-ehci,id=ehci \
+#	-device usb-kbd,port=1 \
+#	-device usb-storage,drive=my_usbmass \
+#	-drive if=none,id=my_usbmass,format=raw,file=${USBIMG}"
 
 DISKS=""
 if [ x${SATAIMG} != x"" ] ; then
@@ -249,6 +260,9 @@ if [ x${SATAIMG2} != x"" ] ; then
 fi
 if [ x${MMCIMG} != x"" ] ; then
 	DISKS="${DISKS} ${MMCDISK}"
+fi
+if [ x${HD0} != x"" ] ; then
+	DISKS="${DISKS} ${VDISK}"
 fi
 if [ x${Uflag} != x"" ] ; then
   if [ x${USBIMG} != x"" ] ; then
@@ -263,16 +277,23 @@ fi
 cd /home/akashi/arm/armv8/linaro/uefi
 #cd /home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug
 
+# for TF-A
+echo ${ATF_CD}
+${ATF_CD}
+
 KERNBIN="-kernel ${IMAGE} ${DTB}"
 
 #	-drive if=pflash,index=1,format=raw,file=/opt/buildroot/16.11_64.vfat \
 
 CMD="${SUDO} ${QEMU} ${DEBUG} ${SERIAL} \
 	-nographic \
+	-serial mon:stdio \
 	-machine virt,gic-version=${GICV},virtualization=${VIRT},${SECURE} \
 	-cpu cortex-a57 -smp 4 \
-	-m 512 \
+	-m 4096 \
+	-d unimp \
 	-semihosting \
+	-semihosting-config enable=on,target=native \
 	${NETWORK} \
 	${RFS9P} \
 	${VFS} \
@@ -291,6 +312,7 @@ else
 	${ECHO} ${CMD} ${BOOTBIN} ${DTB}
 fi
 
+#	-semihosting-config enable=on,target=native \
 #	-machine virt,dumpdtb=/tmp/qemu.dtb \
 
 #	-serial telnet:localhost:1234,server,nowait \
@@ -307,3 +329,4 @@ fi
 #-serial stdio \
 #-curses \
 #-nographic \
+#-semihosting-config enable,target=native
