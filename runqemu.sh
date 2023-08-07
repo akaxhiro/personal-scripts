@@ -33,17 +33,19 @@ ROOTDIR=/opt/buildroot/17.08
 
 # AHCI SCSI device
 #SATAIMG=/opt/disk/xen_a64_test.img
-SATAIMG=/opt/disk/gpt_2part.img
+SATAIMG=/media/akashi/9c294da6-3517-431a-9c23-057662ab07b6/opt_disk/xen_a64_test.img
+####SATAIMG=/opt/disk/gpt_2part.img
 #SATAIMG=/opt/disk/disk_nogpt.img
 
 # AHCI SCSI device
 #SATAIMG2=/opt/disk/debian-testing-arm64-netinst.iso
 #SATAIMG2=/opt/disk/disk_nogpt.img
-SATAIMG2=/opt/disk/gpt_2part_2.img
+####SATAIMG2=/opt/disk/gpt_2part_2.img
 
 # For EFI usb storage patch,
 # add PCI-based xHCI controller
-USBIMG=/opt/disk/debian-testing-arm64-netinst.iso
+#USBIMG=/opt/disk/debian-testing-arm64-netinst.iso
+:wq
 #USBIMG=/opt/disk/gpt_2part_3.img
 #USBIMG=/opt/disk/disk_nogpt.img
 #USBIMG=/opt/disk/gpt_2part.img
@@ -89,8 +91,7 @@ else
 #QEMU_WORK=/home/akashi/arm/armv8/linaro/uefi
 QEMU_WORK=/home/akashi/arm/work/qemu_work
 
-#ROOTDIR=/opt/buildroot/16.11_64
-ROOTDIR=/opt/ubuntu/16.04
+#ROOTDIR=/opt/ubuntu/16.04
 ROOTDIR=/opt/ubuntu/16.04_arm64
 #ROOTDIR=/opt/debian/jessie
 #ROOTDIR=/media/akashi/root
@@ -146,9 +147,11 @@ fi
 # root:rootroot
 # virtio block device
 # have some of edk2 apps
-HD0=/opt/disk/xen_debian2.img
+#HD0=/opt/disk/xen_debian2.img
+#HD1=/opt/disk/xen_debian2.img
 #HD1=/opt/disk/xen_debian_guest.img
-HD1=/opt/disk/disk_nogpt.img
+#HD1=/opt/disk/disk_nogpt.img
+#HD0=/opt/disk/disk_nogpt.img
 
 # Enable this for secboot test; data file system
 #HD0=/home/akashi/tmp/secboot_test.img
@@ -180,6 +183,12 @@ UEFI_VARS_PATH=/home/akashi/arm/work/qemu_work/QEMU_VARS.rom.centos
 #ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/bl1.bin64
 #ATF_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/bl1.bin
 #FIP_PATH=/home/akashi/arm/armv8/linaro/uefi/atf/build/qemu/debug/fip_uboot_secb.bin64
+
+# moved binaries for backup
+#ATF_PATH=/home/akashi/arm/uefi/atf/build/qemu/debug/bl1.bin
+#FIP_PATH=/home/akashi/arm/uefi/atf/build/qemu/debug/fip.bin
+ATF_PATH=/home/akashi/arm/build/atf_20201019/qemu/debug/bl1.bin
+FIP_PATH=/home/akashi/arm/build/atf_20201019/qemu/debug/fip.bin
 
 ATF_PATH=/home/akashi/arm/uefi/atf/build/qemu/debug/bl1.bin
 FIP_PATH=/home/akashi/arm/uefi/atf/build/qemu/debug/fip.bin
@@ -273,6 +282,8 @@ if [ x$uflag != x"" ] ; then
 
 	UBOOT_PATH=${QEMU_WORK}/flash_uboot.bin
 	BOOTBIN="-bios ${UBOOT_PATH}"
+	# for SCMI test,
+	BOOTBIN="-bios /home/akashi/arm/uefi/atf/build/qemu/release/bl1.bin"
 
 #	Old
 #	BOOTBIN="-drive file=${UBOOT_PATH},format=raw,if=pflash,index=0"
@@ -281,8 +292,10 @@ if [ x$uflag != x"" ] ; then
 	UBOOT_PATH=${QEMU_WORK}/u-boot.bin
 	#UBOOT_PATH=/home/akashi/arm/build/uboot_202207/u-boot.bin
 	#UBOOT_PATH=/home/akashi/arm/build/uboot_bootmgr/u-boot.bin
-	UBOOT_PATH=/home/akashi/arm/build/uboot_menu/u-boot.bin
+	#UBOOT_PATH=/home/akashi/arm/build/uboot_menu/u-boot.bin
 	#UBOOT_PATH=/home/akashi/arm/build/uboot_usb_mas/u-boot.bin
+	UBOOT_PATH=/home/akashi/arm/build/uboot_scmi/u-boot.bin
+#	UBOOT_PATH=/home/akashi/arm/build/uboot_scmi_202304/u-boot.bin
 #	64MB fat image doesn't work
 # 	UBOOT_PATH=${QEMU_WORK}/u-boot_64mb.bin
 
@@ -451,6 +464,10 @@ fi
 # Need chdir if semihosting
 # echo changing curret directory to ${QEMU_WORK}
 # cd ${QEMU_WORK}
+
+# for SCMI test,
+#cd /home/akashi/arm/uefi/atf/build/qemu/debug
+cd /home/akashi/arm/uefi/out/bin
 
 KERNBIN="-kernel ${IMAGE} ${DTB}"
 # DEBUG for zephyr
